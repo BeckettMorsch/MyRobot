@@ -84,10 +84,17 @@ public class Goodbot extends AdvancedRobot {
             this.setTurnRadarRightRadians(Utils.normalRelativeAngle(absBearing - this.getRadarHeadingRadians()) * 2.0D);
             this._surfDirections.add(0, new Integer(lateralVelocity >= 0.0D ? 1 : -1));
             this._surfAbsBearings.add(0, new java.lang.Double(absBearing + 3.141592653589793D));
-            double bulletPower = _oppEnergy - e.getEnergy();
+            double bulletPower =0;
+            if (e.getDistance() < 10) {
+                 bulletPower = 3.0;
+            }
+            else{
+                bulletPower = _oppEnergy - e.getEnergy();
+            }
+
             if (bulletPower < 3.01D && bulletPower > 0.09D && this._surfDirections.size() > 2) {
                 Goodbot.EnemyWave ew = new Goodbot.EnemyWave();
-                ew._surfStats = stats[(int)(e.getDistance() / 100)];
+                ew._surfStats = stats[(int)(e.getDistance() / 100)]; //-----------------------
                 ew.fireTime = this.getTime() - 1L;
                 ew.bulletVelocity = bulletVelocity(bulletPower);
                 ew.distanceTraveled = bulletVelocity(bulletPower);
