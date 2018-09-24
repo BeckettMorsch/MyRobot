@@ -8,6 +8,8 @@ import robocode.AdvancedRobot;
 import robocode.HitByBulletEvent;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
+import static robocode.util.Utils.normalRelativeAngleDegrees;
+
 
 /*
  * SuperBoxBot - a SuperSampleBot by Exauge
@@ -71,6 +73,11 @@ public class Goodbot extends AdvancedRobot {
             this._surfAbsBearings = new ArrayList();
             this.setAdjustGunForRobotTurn(true);
             this.setAdjustRadarForGunTurn(true);
+            setBodyColor(Color.black);
+            setGunColor(Color.yellow);
+            setRadarColor(Color.black);
+            setScanColor(Color.yellow);
+            setBulletColor(Color.yellow);
 
             while(true) {
                 this.turnRadarRightRadians(1.0D / 0.0);
@@ -78,20 +85,50 @@ public class Goodbot extends AdvancedRobot {
         }
 
         public void onScannedRobot(ScannedRobotEvent e) {
+            //---------------------------------------------------------------------
             this._myLocation = new Double(this.getX(), this.getY());
             double lateralVelocity = this.getVelocity() * Math.sin(e.getBearingRadians());
             double absBearing = e.getBearingRadians() + this.getHeadingRadians();
             this.setTurnRadarRightRadians(Utils.normalRelativeAngle(absBearing - this.getRadarHeadingRadians()) * 2.0D);
             this._surfDirections.add(0, new Integer(lateralVelocity >= 0.0D ? 1 : -1));
             this._surfAbsBearings.add(0, new java.lang.Double(absBearing + 3.141592653589793D));
-            double bulletPower =0;
-            if (e.getDistance() < 10) {
-                 bulletPower = 3.0;
-            }
-            else{
+            double bulletPower = 0;
+            int turnDirection = 1;
+
+            if (e.getDistance() < 100) {
+                bulletPower = 3.0;
+            } else {
                 bulletPower = _oppEnergy - e.getEnergy();
             }
 
+            if (e.getEnergy() == 0)
+            {
+                double absoluteBearing = getHeading() + e.getBearing();
+                double bearingFromGun = normalRelativeAngleDegrees(absoluteBearing - getGunHeading());
+
+                // If it's close enough, fire!
+                if (Math.abs(bearingFromGun) <= 3) {
+                    turnGunRight(bearingFromGun);
+                    // We MUST check getGunHeat(), because if it's greater than 0 and we attempt to fire(), we will lose a turn
+                    // If getGunHeat = 0, we are allowed to shoot. Consult the wiki for more on barrel heat and shooting.
+                    if (getGunHeat() == 0) {
+                        fire(Math.min(3 - Math.abs(bearingFromGun), getEnergy() - .1));
+                    }
+                }
+                if (e.getBearing() >= 0) {
+                    turnDirection = 1;
+                } else {
+                    turnDirection = -1;
+                }
+
+                turnRight(e.getBearing());
+                ahead(e.getDistance() + 5);
+                scan(); // Might want to move ahead again!
+
+                ahead(40); // Ram him again!
+                //timesRammedOpponent++;
+            }
+//-------------------------------------------------------
             if (bulletPower < 3.01D && bulletPower > 0.09D && this._surfDirections.size() > 2) {
                 Goodbot.EnemyWave ew = new Goodbot.EnemyWave();
                 ew._surfStats = stats[(int)(e.getDistance() / 100)]; //-----------------------
