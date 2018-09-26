@@ -101,7 +101,7 @@ public class Goodbot extends AdvancedRobot {
                 bulletPower = _oppEnergy - e.getEnergy();
             }
 
-            if (e.getEnergy() == 0)
+            if (e.getEnergy() <= 0)
             {
                 double absoluteBearing = getHeading() + e.getBearing();
                 double bearingFromGun = normalRelativeAngleDegrees(absoluteBearing - getGunHeading());
